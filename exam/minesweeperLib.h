@@ -216,7 +216,7 @@ void minesweeper() {
         system("cls");
     } while (choice < 1 || choice > 3);
 
-    srand((unsigned int)time(0));
+    srand(time(0));
     system("title Minesweeper");
 
     switch (choice) {

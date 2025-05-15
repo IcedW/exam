@@ -4,18 +4,6 @@
 #include <ctime>
 using namespace std;
 
-//difficulties
-const int WIDTH1 = 10;
-const int HEIGHT1 = 5;
-const int MINES1 = 10;
-
-const int WIDTH2 = 20;
-const int HEIGHT2 = 10;
-const int MINES2 = 30;
-
-const int WIDTH3 = 30;
-const int HEIGHT3 = 15;
-const int MINES3 = 60;
 //
 //controls and colors
 enum Key { LEFT = 75, RIGHT = 77, UP = 72, DOWN = 80, ENTER = 13, SPACE = 32 };

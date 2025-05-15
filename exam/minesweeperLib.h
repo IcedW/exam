@@ -25,20 +25,13 @@ enum Color {
     LIGHTMAGENTA, YELLOW, WHITE
 };
 //ingame states
-bool mines1[HEIGHT1][WIDTH1] = {};
-bool revealed1[HEIGHT1][WIDTH1] = {};
-bool flagged1[HEIGHT1][WIDTH1] = {};
-int adjacent1[HEIGHT1][WIDTH1] = {};
-
-bool mines2[HEIGHT2][WIDTH2] = {};
-bool revealed2[HEIGHT2][WIDTH2] = {};
-bool flagged2[HEIGHT2][WIDTH2] = {};
-int adjacent2[HEIGHT2][WIDTH2] = {};
-
-bool mines3[HEIGHT3][WIDTH3] = {};
-bool revealed3[HEIGHT3][WIDTH3] = {};
-bool flagged3[HEIGHT3][WIDTH3] = {};
-int adjacent3[HEIGHT3][WIDTH3] = {};
+struct stats {
+    int width, height, mines;
+    bool** mine;
+    bool** revealed;
+    bool** flagged;
+    int** adjacent;
+};
 //
 HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE); //SetConsoleCursorPosition; SetConsoleTextAttribute
 
@@ -48,416 +41,177 @@ void setCursor(int x, int y) {
 } //cursor position
 
 void setColor(Color c) {
-    SetConsoleTextAttribute(h, c);
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), c);
 } //text color
 
-void placeMines1() {
+void placeMines(stats& dif) {
     int placed = 0;
-    while (placed < MINES1) {
-        int x = rand() % WIDTH1;
-        int y = rand() % HEIGHT1;
-        if (!mines1[y][x]) {
-            mines1[y][x] = true;
+    while (placed < dif.mines) {
+        int x = rand() % dif.width;
+        int y = rand() % dif.height;
+        if (!dif.mine[y][x]) {
+            dif.mine[y][x] = true;
             placed++;
         }
     }
 }
 
-void placeMines2() {
-    int placed = 0;
-    while (placed < MINES2) {
-        int x = rand() % WIDTH2;
-        int y = rand() % HEIGHT2;
-        if (!mines2[y][x]) {
-            mines2[y][x] = true;
-            placed++;
-        }
-    }
-}
-
-void placeMines3() {
-    int placed = 0;
-    while (placed < MINES3) {
-        int x = rand() % WIDTH3;
-        int y = rand() % HEIGHT3;
-        if (!mines3[y][x]) {
-            mines3[y][x] = true;
-            placed++;
-        }
-    }
-}
-
-void calculateAdjacent1() {
-    for (int y = 0; y < HEIGHT1; y++) {
-        for (int x = 0; x < WIDTH1; x++) {
-            if (!mines1[y][x]) {
-                int count = 0;
-                for (int dy = -1; dy <= 1; dy++) {
-                    for (int dx = -1; dx <= 1; dx++) {
-                        int ny = y + dy;
-                        int nx = x + dx;
-                        if (nx >= 0 && ny >= 0 && nx < WIDTH1 && ny < HEIGHT1 && mines1[ny][nx])
-                            count++;
-                    }
-                }
-                adjacent1[y][x] = count;
+void calcAdj(stats& dif) {
+    for (int y = 0; y < dif.height; y++) {
+        for (int x = 0; x < dif.width; x++) {
+            if (dif.mine[y][x]) {
+                dif.adjacent[y][x] = -1;
+                continue;
             }
-        }
-    }
-}
-
-void calculateAdjacent2() {
-    for (int y = 0; y < HEIGHT2; y++) {
-        for (int x = 0; x < WIDTH2; x++) {
-            if (!mines2[y][x]) {
-                int count = 0;
-                for (int dy = -1; dy <= 1; dy++) {
-                    for (int dx = -1; dx <= 1; dx++) {
-                        int ny = y + dy;
-                        int nx = x + dx;
-                        if (nx >= 0 && ny >= 0 && nx < WIDTH2 && ny < HEIGHT2 && mines2[ny][nx])
-                            count++;
-                    }
+            int count = 0;
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx >= 0 && nx < dif.width && ny >= 0 && ny < dif.height && dif.mine[ny][nx])
+                        count++;
                 }
-                adjacent2[y][x] = count;
             }
+            dif.adjacent[y][x] = count;
         }
     }
 }
 
-void calculateAdjacent3() {
-    for (int y = 0; y < HEIGHT3; y++) {
-        for (int x = 0; x < WIDTH3; x++) {
-            if (!mines3[y][x]) {
-                int count = 0;
-                for (int dy = -1; dy <= 1; dy++) {
-                    for (int dx = -1; dx <= 1; dx++) {
-                        int ny = y + dy;
-                        int nx = x + dx;
-                        if (nx >= 0 && ny >= 0 && nx < WIDTH3 && ny < HEIGHT3 && mines3[ny][nx])
-                            count++;
-                    }
-                }
-                adjacent3[y][x] = count;
-            }
-        }
-    }
-}
-
-void reveal1(int x, int y) {
-    if (x < 0 || y < 0 || x >= WIDTH1 || y >= HEIGHT1 || revealed1[y][x] || flagged1[y][x])
+void reveal(stats& dif, int x, int y) {
+    if (x < 0 || y < 0 || x >= dif.width || y >= dif.height || dif.revealed[y][x] || dif.flagged[y][x])
         return;
 
-    revealed1[y][x] = true;
+    dif.revealed[y][x] = true;
 
-    if (adjacent1[y][x] == 0 && !mines1[y][x]) {
+    if (dif.adjacent[y][x] == 0 && !dif.mine[y][x]) {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
                 if (dx != 0 || dy != 0)
-                    reveal1(x + dx, y + dy);
+                    reveal(dif, x + dx, y + dy);
             }
         }
     }
 }
 
-void reveal2(int x, int y) {
-    if (x < 0 || y < 0 || x >= WIDTH2 || y >= HEIGHT2 || revealed2[y][x] || flagged2[y][x])
-        return;
+void draw(const stats& dif, int cursorX, int cursorY) {
+    system("cls");
+    for (int y = 0; y < dif.height; y++) {
+        for (int x = 0; x < dif.width; x++) {
+            if (x == cursorX && y == cursorY) 
+                setColor(DARKGREY);
+            else 
+                setColor(WHITE);
 
-    revealed2[y][x] = true;
-
-    if (adjacent2[y][x] == 0 && !mines2[y][x]) {
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
-                if (dx != 0 || dy != 0)
-                    reveal2(x + dx, y + dy);
+            if (dif.revealed[y][x]) {
+                if (dif.mine[y][x]) cout << "* ";
+                else cout << dif.adjacent[y][x] << ' ';
+            }
+            else if (dif.flagged[y][x]) {
+                setColor(RED);
+                cout << "F ";
+                setColor(WHITE);
+            }
+            else {
+                cout << "# ";
             }
         }
-    }
-}
-
-void reveal3(int x, int y) {
-    if (x < 0 || y < 0 || x >= WIDTH3 || y >= HEIGHT3 || revealed3[y][x] || flagged3[y][x])
-        return;
-
-    revealed3[y][x] = true;
-
-    if (adjacent3[y][x] == 0 && !mines3[y][x]) {
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
-                if (dx != 0 || dy != 0)
-                    reveal3(x + dx, y + dy);
-            }
-        }
-    }
-}
-
-void draw1(int cursorX, int cursorY) {
-    setCursor(0, 0);
-    for (int y = 0; y < HEIGHT1; y++) {
-        for (int x = 0; x < WIDTH1; x++) {
-            if (x == cursorX && y == cursorY)
-                setColor(WHITE);
-            else
-                setColor(LIGHTGREY);
-
-            if (flagged1[y][x])
-                cout << "F";
-            else if (!revealed1[y][x])
-                cout << (char)177;
-            else if (mines1[y][x])
-                cout << "*";
-            else if (adjacent1[y][x] > 0)
-                cout << adjacent1[y][x];
-            else
-                cout << " ";
-        }
         cout << "\n";
+        setColor(LIGHTGREY);
     }
 }
 
-void draw2(int cursorX, int cursorY) {
-    setCursor(0, 0);
-    for (int y = 0; y < HEIGHT2; y++) {
-        for (int x = 0; x < WIDTH2; x++) {
-            if (x == cursorX && y == cursorY)
-                setColor(WHITE);
-            else
-                setColor(LIGHTGREY);
-
-            if (flagged2[y][x])
-                cout << "F";
-            else if (!revealed2[y][x])
-                cout << (char)177;
-            else if (mines2[y][x])
-                cout << "*";
-            else if (adjacent2[y][x] > 0)
-                cout << adjacent2[y][x];
-            else
-                cout << " ";
-        }
-        cout << "\n";
-    }
-}
-
-void draw3(int cursorX, int cursorY) {
-    setCursor(0, 0);
-    for (int y = 0; y < HEIGHT3; y++) {
-        for (int x = 0; x < WIDTH3; x++) {
-            if (x == cursorX && y == cursorY)
-                setColor(WHITE);
-            else
-                setColor(LIGHTGREY);
-
-            if (flagged3[y][x])
-                cout << "F";
-            else if (!revealed3[y][x])
-                cout << (char)177;
-            else if (mines3[y][x])
-                cout << "*";
-            else if (adjacent3[y][x] > 0)
-                cout << adjacent3[y][x];
-            else
-                cout << " ";
-        }
-        cout << "\n";
-    }
-}
-
-bool checkWin1() {
-    for (int y = 0; y < HEIGHT1; y++)
-        for (int x = 0; x < WIDTH1; x++)
-            if (!mines1[y][x] && !revealed1[y][x])
+bool checkWin(const stats& dif) {
+    for (int y = 0; y < dif.height; y++) {
+        for (int x = 0; x < dif.width; x++) {
+            if (!dif.mine[y][x] && !dif.revealed[y][x])
                 return false;
+            if (dif.mine[y][x] && !dif.flagged[y][x])
+                return false;
+        }
+    }
     return true;
 }
 
-bool checkWin2() {
-    for (int y = 0; y < HEIGHT2; y++)
-        for (int x = 0; x < WIDTH2; x++)
-            if (!mines2[y][x] && !revealed2[y][x])
-                return false;
-    return true;
+void initDif(stats& dif, int width, int height, int mines) {
+    dif.width = width;
+    dif.height = height;
+    dif.mines = mines;
+
+    dif.mine = new bool* [height];
+    dif.revealed = new bool* [height];
+    dif.flagged = new bool* [height];
+    dif.adjacent = new int* [height];
+
+    for (int i = 0; i < height; i++) {
+        dif.mine[i] = new bool[width] {};
+        dif.revealed[i] = new bool[width] {};
+        dif.flagged[i] = new bool[width] {};
+        dif.adjacent[i] = new int[width] {};
+    }
+
+    placeMines(dif);
+    calcAdj(dif);
 }
 
-bool checkWin3() {
-    for (int y = 0; y < HEIGHT3; y++)
-        for (int x = 0; x < WIDTH3; x++)
-            if (!mines3[y][x] && !revealed3[y][x])
-                return false;
-    return true;
+void cleanupDif(stats& dif) {
+    for (int i = 0; i < dif.height; i++) {
+        delete[] dif.mine[i];
+        delete[] dif.revealed[i];
+        delete[] dif.flagged[i];
+        delete[] dif.adjacent[i];
+    }
+    delete[] dif.mine;
+    delete[] dif.revealed;
+    delete[] dif.flagged;
+    delete[] dif.adjacent;
 }
 
-bool dif1() {
-    placeMines1();
-    calculateAdjacent1();
+void difChoice(int width, int height, int mines) {
+    stats dif;
+    initDif(dif, width, height, mines);
 
     int cursorX = 0, cursorY = 0;
-    bool gameover = false;
+    bool gameOver = false;
+    bool win = false;
 
-    while (true) {
-        draw1(cursorX, cursorY);
-        if (checkWin1()) {
-            setCursor(0, HEIGHT1 + 1);
-            setColor(GREEN);
-            cout << "won";
-            break;
-        }
-        if (gameover) {
-            for (int y = 0; y < HEIGHT1; y++) {
-                for (int x = 0; x < WIDTH1; x++) {
-                    if (mines1[y][x]) revealed1[y][x] = true;
-                }
-            }
-            draw1(-1, -1);
-            setCursor(0, HEIGHT1 + 1);
-            setColor(RED);
-            cout << "explode";
-            break;
-        }
-        int ch = _getch();
-        if (ch == 224) ch = _getch();
-        switch (ch) {
-        case Key::LEFT:  if (cursorX > 0) cursorX--; break;
-        case Key::RIGHT: if (cursorX < WIDTH1 - 1) cursorX++; break;
-        case Key::UP:    if (cursorY > 0) cursorY--; break;
-        case Key::DOWN:  if (cursorY < HEIGHT1 - 1) cursorY++; break;
-        case Key::SPACE:
-            if (!flagged1[cursorY][cursorX] && !revealed1[cursorY][cursorX]) {
-                if (mines1[cursorY][cursorX]) {
-                    gameover = true;
+    while (!gameOver) {
+        draw(dif, cursorX, cursorY);
+        char input = _getch();
+
+        switch (input) {
+        case UP: if (cursorY > 0) cursorY--; break;
+        case DOWN: if (cursorY < height - 1) cursorY++; break;
+        case LEFT: if (cursorX > 0) cursorX--; break;
+        case RIGHT: if (cursorX < width - 1) cursorX++; break;
+        case SPACE:
+            if (!dif.flagged[cursorY][cursorX]) {
+                if (dif.mine[cursorY][cursorX]) {
+                    dif.revealed[cursorY][cursorX] = true;
+                    gameOver = true;
+                    win = false;
                 }
                 else {
-                    reveal1(cursorX, cursorY);
+                    reveal(dif, cursorX, cursorY); // recursive reveal logic
+                    if (checkWin(dif)) {
+                        gameOver = true;
+                        win = true;
+                    }
                 }
             }
             break;
-        case Key::ENTER:
-            if (!revealed1[cursorY][cursorX] && !gameover)
-                flagged1[cursorY][cursorX] = !flagged1[cursorY][cursorX];
+        case ENTER:
+            if (!dif.revealed[cursorY][cursorX])
+                dif.flagged[cursorY][cursorX] = !dif.flagged[cursorY][cursorX];
+                if (checkWin(dif)) {
+                    gameOver = true;
+                    win = true;
+                }
             break;
         }
     }
 
-    setCursor(0, HEIGHT1 + 2);
-    system("pause");
-    return 0;
-}
-
-bool dif2() {
-    placeMines2();
-    calculateAdjacent2();
-
-    int cursorX = 0, cursorY = 0;
-    bool gameover = false;
-
-    while (true) {
-        draw2(cursorX, cursorY);
-
-        if (checkWin2()) {
-            setCursor(0, HEIGHT2 + 1);
-            setColor(GREEN);
-            cout << "won";
-            break;
-        }
-
-        if (gameover) {
-            for (int y = 0; y < HEIGHT2; y++) {
-                for (int x = 0; x < WIDTH2; x++) {
-                    if (mines2[y][x]) revealed2[y][x] = true;
-                }
-            }
-            draw2(-1, -1);
-            setCursor(0, HEIGHT2 + 1);
-            setColor(RED);
-            cout << "explode";
-            break;
-        }
-
-        int ch = _getch();
-        if (ch == 224) ch = _getch();
-
-        switch (ch) {
-        case Key::LEFT:  if (cursorX > 0) cursorX--; break;
-        case Key::RIGHT: if (cursorX < WIDTH2 - 1) cursorX++; break;
-        case Key::UP:    if (cursorY > 0) cursorY--; break;
-        case Key::DOWN:  if (cursorY < HEIGHT2 - 1) cursorY++; break;
-        case Key::SPACE:
-            if (!flagged2[cursorY][cursorX] && !revealed2[cursorY][cursorX]) {
-                reveal2(cursorX, cursorY);
-                if (mines2[cursorY][cursorX]) {
-                    gameover = true;
-                }
-            }
-            break;
-        case Key::ENTER:
-            if (!revealed2[cursorY][cursorX] && !gameover)
-                flagged2[cursorY][cursorX] = !flagged2[cursorY][cursorX];
-            break;
-        }
-    }
-
-    setCursor(0, HEIGHT2 + 2);
-    system("pause");
-    return 0;
-}
-
-bool dif3() {
-    placeMines3();
-    calculateAdjacent3();
-
-    int cursorX = 0, cursorY = 0;
-    bool gameover = false;
-
-    while (true) {
-        draw3(cursorX, cursorY);
-
-        if (checkWin3()) {
-            setCursor(0, HEIGHT3 + 1);
-            setColor(GREEN);
-            cout << "won";
-            break;
-        }
-
-        if (gameover) {
-            for (int y = 0; y < HEIGHT3; y++) {
-                for (int x = 0; x < WIDTH3; x++) {
-                    if (mines3[y][x]) revealed3[y][x] = true;
-                }
-            }
-            draw3(-1, -1);
-            setCursor(0, HEIGHT3 + 1);
-            setColor(RED);
-            cout << "explode";
-            break;
-        }
-
-        int ch = _getch();
-        if (ch == 224) ch = _getch();
-
-        switch (ch) {
-        case Key::LEFT:  if (cursorX > 0) cursorX--; break;
-        case Key::RIGHT: if (cursorX < WIDTH3 - 1) cursorX++; break;
-        case Key::UP:    if (cursorY > 0) cursorY--; break;
-        case Key::DOWN:  if (cursorY < HEIGHT3 - 1) cursorY++; break;
-        case Key::SPACE:
-            if (!flagged3[cursorY][cursorX] && !revealed3[cursorY][cursorX]) {
-                reveal3(cursorX, cursorY);
-                if (mines3[cursorY][cursorX]) {
-                    gameover = true;
-                }
-            }
-            break;
-        case Key::ENTER:
-            if (!revealed3[cursorY][cursorX] && !gameover)
-                flagged3[cursorY][cursorX] = !flagged3[cursorY][cursorX];
-            break;
-        }
-    }
-
-    setCursor(0, HEIGHT3 + 2);
-    system("pause");
-    return 0;
+    draw(dif, cursorX, cursorY);
+    cout << (win ? "winner" : "explode") << "\n";
+    cleanupDif(dif);
 }
 
 void minesweeper() {
@@ -467,9 +221,9 @@ void minesweeper() {
         setColor(DARKGREY);
         cout << "Minesweeper\n";
         setColor(WHITE);
-        cout << "1 Easy\n";
-        cout << "2 Normal\n";
-        cout << "3 Hard\n";
+        cout << "1 Beginner\n";
+        cout << "2 Intermediate\n";
+        cout << "3 Expert\n";
         cin >> choice;
         system("cls");
     } while (choice < 1 || choice > 3);
@@ -479,13 +233,13 @@ void minesweeper() {
 
     switch (choice) {
     case 1:
-        if (dif1()) return;
+        difChoice(8, 8, 10);
         break;
     case 2:
-        if (dif2()) return;
+        difChoice(16, 16, 40);
         break;
     case 3:
-        if (dif3()) return;
+        difChoice(30, 16, 99);
         break;
     default:
         cout << "wrong.\n";

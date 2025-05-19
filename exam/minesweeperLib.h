@@ -33,10 +33,10 @@ void setColor(Color c) {
 } //text color
 
 void placeMines(stats& dif) {
-    int placed = 0;
+    int placed = 0; // current mine amount int
     while (placed < dif.mines) {
-        int x = rand() % dif.width;
-        int y = rand() % dif.height;
+        int x = rand() % dif.width; // mine gen
+        int y = rand() % dif.height; // mine gen
         if (!dif.mine[y][x]) {
             dif.mine[y][x] = true;
             placed++;
@@ -67,9 +67,7 @@ void calcAdj(stats& dif) {
 void reveal(stats& dif, int x, int y) {
     if (x < 0 || y < 0 || x >= dif.width || y >= dif.height || dif.revealed[y][x] || dif.flagged[y][x])
         return;
-
     dif.revealed[y][x] = true;
-
     if (dif.adjacent[y][x] == 0 && !dif.mine[y][x]) {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
@@ -88,7 +86,6 @@ void draw(const stats& dif, int cursorX, int cursorY) {
                 setColor(DARKGREY);
             else 
                 setColor(WHITE);
-
             if (dif.revealed[y][x]) {
                 if (dif.mine[y][x]) cout << "* ";
                 else cout << dif.adjacent[y][x] << ' ';
@@ -119,16 +116,31 @@ bool checkWin(const stats& dif) {
     return true;
 }
 
+void lastwinner() {
+    SetConsoleCP(65001);
+    SetConsoleOutputCP(65001);
+    string uname;
+    cout << "you are the last winner! write your username: ";
+    cin >> uname;
+    FILE* file;
+    int error = fopen_s(&file, "C:/Users/Admin/Desktop/win.txt", "w");
+    if (error == 0 && file != nullptr) {
+        fprintf(file, "the winner is \"%s\"\n", uname.c_str()); //i looked "%s" up cause i coudlnt figure out how to put a string in there.
+        fclose(file);
+    }
+    else {
+        cout << "eror\n";
+    }
+}
+
 void initDif(stats& dif, int width, int height, int mines) {
     dif.width = width;
     dif.height = height;
     dif.mines = mines;
-
     dif.mine = new bool* [height];
     dif.revealed = new bool* [height];
     dif.flagged = new bool* [height];
     dif.adjacent = new int* [height];
-
     for (int i = 0; i < height; i++) {
         dif.mine[i] = new bool[width] {};
         dif.revealed[i] = new bool[width] {};
@@ -182,6 +194,7 @@ void difChoice(int width, int height, int mines) {
                     if (checkWin(dif)) {
                         gameOver = true;
                         win = true;
+                        lastwinner();
                     }
                 }
             }
@@ -192,11 +205,11 @@ void difChoice(int width, int height, int mines) {
                 if (checkWin(dif)) {
                     gameOver = true;
                     win = true;
+                    lastwinner();
                 }
             break;
         }
     }
-
     draw(dif, cursorX, cursorY);
     cout << (win ? "winner" : "explode") << "\n";
     cleanupDif(dif);
@@ -204,7 +217,6 @@ void difChoice(int width, int height, int mines) {
 
 void minesweeper() {
     int choice;
-
     do {
         setColor(DARKGREY);
         cout << "Minesweeper\n";
@@ -216,7 +228,7 @@ void minesweeper() {
         system("cls");
     } while (choice < 1 || choice > 3);
 
-    srand((unsigned int)time(0));
+    srand(time(0));
     system("title Minesweeper");
 
     switch (choice) {

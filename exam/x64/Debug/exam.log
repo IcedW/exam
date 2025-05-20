@@ -1,2 +1,6 @@
 ﻿  exam.cpp
+C:\Users\Admin\Desktop\coding and step\C++\exam\exam\exam\minesweeperLib.h(231,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  (compiling source file 'exam.cpp')
+  
+  LINK : C:\Users\Admin\Desktop\coding and step\C++\exam\exam\x64\Debug\exam.exe not found or not built by the last incremental link; performing full link
   exam.vcxproj -> C:\Users\Admin\Desktop\coding and step\C++\exam\exam\x64\Debug\exam.exe

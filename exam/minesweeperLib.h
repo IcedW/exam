@@ -12,8 +12,8 @@ enum Color {
     DARKGREY, LIGHTBLUE, LIGHTGREEN, LIGHTCYAN, LIGHTRED,
     LIGHTMAGENTA, YELLOW, WHITE
 };
-//ingame states
-struct stats {
+
+struct stats { //ingame objects/conditions
     int width, height, mines;
     bool** mine;
     bool** revealed;
@@ -35,8 +35,8 @@ void setColor(Color c) {
 void placeMines(stats& dif) {
     int placed = 0; // current mine amount int
     while (placed < dif.mines) {
-        int x = rand() % dif.width; // mine gen
-        int y = rand() % dif.height; // mine gen
+        int x = rand() % dif.width; // mine generation
+        int y = rand() % dif.height; // mine generation
         if (!dif.mine[y][x]) {
             dif.mine[y][x] = true;
             placed++;
@@ -44,7 +44,7 @@ void placeMines(stats& dif) {
     }
 }
 
-void calcAdj(stats& dif) {
+void calcAdj(stats& dif) { //calculating of adjacent mines/tiles
     for (int y = 0; y < dif.height; y++) {
         for (int x = 0; x < dif.width; x++) {
             if (dif.mine[y][x]) {
@@ -65,7 +65,7 @@ void calcAdj(stats& dif) {
 }
 
 void reveal(stats& dif, int x, int y) {
-    if (x < 0 || y < 0 || x >= dif.width || y >= dif.height || dif.revealed[y][x] || dif.flagged[y][x])
+    if (x < 0 || y < 0 || x >= dif.width || y >= dif.height || dif.revealed[y][x] || dif.flagged[y][x]) //it checks for these conditions and if one of them is true, it does nothing. 
         return;
     dif.revealed[y][x] = true;
     if (dif.adjacent[y][x] == 0 && !dif.mine[y][x]) {
@@ -78,8 +78,8 @@ void reveal(stats& dif, int x, int y) {
     }
 }
 
-void draw(const stats& dif, int cursorX, int cursorY) {
-    system("cls");
+void draw(const stats& dif, int cursorX, int cursorY) { //visuals
+    system("cls"); //clears console
     for (int y = 0; y < dif.height; y++) {
         for (int x = 0; x < dif.width; x++) {
             if (x == cursorX && y == cursorY) 
@@ -87,16 +87,16 @@ void draw(const stats& dif, int cursorX, int cursorY) {
             else 
                 setColor(WHITE);
             if (dif.revealed[y][x]) {
-                if (dif.mine[y][x]) cout << "* ";
-                else cout << dif.adjacent[y][x] << ' ';
+                if (dif.mine[y][x]) cout << "* "; //mine, if revealed.
+                else cout << dif.adjacent[y][x] << ' '; //nothing if not revealed
             }
             else if (dif.flagged[y][x]) {
                 setColor(RED);
-                cout << "F ";
+                cout << "F "; //flagging
                 setColor(WHITE);
             }
             else {
-                cout << "# ";
+                cout << "# "; //tiles
             }
         }
         cout << "\n";
@@ -108,7 +108,7 @@ bool checkWin(const stats& dif) {
     for (int y = 0; y < dif.height; y++) {
         for (int x = 0; x < dif.width; x++) {
             if (!dif.mine[y][x] && !dif.revealed[y][x])
-                return false;
+                return false; 
             if (dif.mine[y][x] && !dif.flagged[y][x])
                 return false;
         }
@@ -125,7 +125,7 @@ void lastwinner() {
     FILE* file;
     int error = fopen_s(&file, "C:/Users/Admin/Desktop/win.txt", "w");
     if (error == 0 && file != nullptr) {
-        fprintf(file, "the winner is \"%s\"\n", uname.c_str()); //i looked "%s" up cause i coudlnt figure out how to put a string in there.
+        fprintf(file, "the winner is \"%s\"\n", uname.c_str());
         fclose(file);
     }
     else {
@@ -177,7 +177,7 @@ void difChoice(int width, int height, int mines) {
         draw(dif, cursorX, cursorY);
         char input = _getch();
 
-        switch (input) {
+        switch (input) { //inputs checks
         case UP: if (cursorY > 0) cursorY--; break;
         case DOWN: if (cursorY < height - 1) cursorY++; break;
         case LEFT: if (cursorX > 0) cursorX--; break;
@@ -190,7 +190,7 @@ void difChoice(int width, int height, int mines) {
                     win = false;
                 }
                 else {
-                    reveal(dif, cursorX, cursorY); // recursive reveal logic
+                    reveal(dif, cursorX, cursorY);
                     if (checkWin(dif)) {
                         gameOver = true;
                         win = true;

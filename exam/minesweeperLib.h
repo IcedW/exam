@@ -224,9 +224,10 @@ void minesweeper() {
         cout << "1 Beginner\n";
         cout << "2 Intermediate\n";
         cout << "3 Expert\n";
+        cout << "4 Exit\n";
         cin >> choice;
         system("cls");
-    } while (choice < 1 || choice > 3);
+    } while (choice < 1 || choice > 4);
 
     srand(time(0));
     system("title Minesweeper");
@@ -240,6 +241,9 @@ void minesweeper() {
         break;
     case 3:
         difChoice(30, 16, 99);
+        break;
+    case 4:
+        cout << "Goodbye.\n";
         break;
     default:
         cout << "wrong.\n";

@@ -1,5 +1,5 @@
 ﻿  exam.cpp
-C:\Users\Admin\Desktop\coding and step\C++\exam\exam\exam\minesweeperLib.h(232,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Admin\Desktop\coding and step\C++\exam\exam\exam\minesweeperLib.h(247,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   (compiling source file 'exam.cpp')
   
   exam.vcxproj -> C:\Users\Admin\Desktop\coding and step\C++\exam\exam\x64\Debug\exam.exe

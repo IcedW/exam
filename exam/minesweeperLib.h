@@ -215,6 +215,20 @@ void difChoice(int width, int height, int mines) {
     cleanupDif(dif);
 }
 
+void customDif() {
+    int height = 0, width = 0, mine = 0;
+    cout << "insert height\n";
+    cin >> height;
+    if (height <= 0 && height > 46) height = 8;
+    cout << "inswert width\n";
+    cin >> width;
+    if (width <= 0 && width > 94) width = 8;
+    cout << "insert the amount of mines\n";
+    cin >> mine;
+    if (mine <= 0 && mine > 3000) mine = 10;
+    difChoice(height, width, mine);
+}
+
 void minesweeper() {
     int choice;
     do {
@@ -224,10 +238,11 @@ void minesweeper() {
         cout << "1 Beginner\n";
         cout << "2 Intermediate\n";
         cout << "3 Expert\n";
-        cout << "4 Exit\n";
+        cout << "4 Custom\n";
+        cout << "5 Exit\n";
         cin >> choice;
         system("cls");
-    } while (choice < 1 || choice > 4);
+    } while (choice < 1 || choice > 5);
 
     srand(time(0));
     system("title Minesweeper");
@@ -243,6 +258,9 @@ void minesweeper() {
         difChoice(30, 16, 99);
         break;
     case 4:
+        customDif();
+        break;
+    case 5:
         cout << "Goodbye.\n";
         break;
     default:
